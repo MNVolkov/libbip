@@ -1,0 +1,5 @@
+*.bak
+*.elf
+*.map
+*.o
+foo
