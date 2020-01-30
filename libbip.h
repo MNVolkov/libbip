@@ -9,30 +9,30 @@
 /////////////////////////////////////////////////////////////
 /****
 v.1.2 - 06.01.2020
-+	добавлены функции прошивки:
++	New features:
 	send_host_app_msg, send_host_app_data
 	get_ptr_screen_memory,  
 	show_elf_res_by_id, get_res_params, get_res_count 
 	read_elf_res_by_id
 	
-*	исправлена работа следующих функций:
-	pvPortMalloc - при нехватке памяти возвращает NULL (раньше была перезагрузка)
-	read_res_by_id - исправлена ошибка в реализации, добалена возможность чтения стоковых ресурсов
+*	Fixes:
+	pvPortMalloc - Was causing the watch to reboot when unable to allocate memory, now returns NULL
+	read_res_by_id - Implementation bug fixed that prevented stock resources from being read
 
 *	
 
 v.1.1 - 12.10.2019
-+	добавлены функции прошивки:
-	+	_rand, _srand (спасибо @Rainberd)
-+	добавлены функции библиотеки:
++	New firmware features:
+	+	_rand, _srand (Thanks @Rainberd)
++	New library functions:
 	+	ElfReadSettings, 
 	+	ElfWriteSettings, 
 	+	ElfGetSettingsSize, 
 	+	show_elf_res_by_id
-*	дополнена структура Elf_proc_ (добавлен параметр index_listed)	
+*	Changes: Elf_proc_ (Added parameter index_listed)	
 
 v.1.0 
--	первая версия библиотеки
+-	First version of the library
 
 *****/
 
