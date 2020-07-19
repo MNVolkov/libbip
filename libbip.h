@@ -1,19 +1,30 @@
 /////////////////////////////////////////////////////////////
 //
-//  FUNCTIONS LIBRARY v.1.2
+//  FUNCTIONS LIBRARY v.1.3
 //	for Amazfit Bip
-//  (C) Maxim Volkov  2019 <Maxim.N.Volkov@ya.ru>
+//  (C) Maxim Volkov  2020 <Maxim.N.Volkov@ya.ru>
 //
+//	SDK BipOS 
 //	Библиотека функций для загрузчика приложений BipOS
 //  
 /////////////////////////////////////////////////////////////
 /****
+v.1.3. - 12.07.2020 
++	добавлены новые функции прошивки: 
+		switch_gps_pressure_sensors, get_navi_data, is_gps_fixed	-	функции для раоты с  GPS и атмосферным давлением
+		add_notification, create_and_show_notification				-	функции создания нотификаций (всплывающих уведомлений)
+		get_current_timestamp	    						        -	значение текущего UNIX timestamp
++	доработаны функции работы с ресурсами ElfGetSettingsSize, ElfReadSettings, ElfWriteSettings, show_elf_res_by_id, get_res_count, get_res_params и т.д. 
+	теперь в качестве аргумента index_listed можно передавать ELF_INDEX_SELF для указания собственного индекса приложения.
++	добавлена поддержка греческого языка приложениями BipOS
+
+
 v.1.2 - 06.01.2020
 +	добавлены функции прошивки:
-	send_host_app_msg, send_host_app_data
-	get_ptr_screen_memory,  
-	show_elf_res_by_id, get_res_params, get_res_count 
-	read_elf_res_by_id
+	send_host_app_msg, send_host_app_data	-	передача сообщений из часов в телефон
+	get_ptr_screen_memory,  				-	получение указателя на область видеопамяти
+	show_elf_res_by_id, get_res_params, 	-	функции обращения с ресурсами часов (собственными и стоковыми)
+	get_res_count, read_elf_res_by_id
 	
 *	исправлена работа следующих функций:
 	pvPortMalloc - при нехватке памяти возвращает NULL (раньше была перезагрузка)
@@ -40,7 +51,7 @@ v.1.0
 #ifndef __LIBBIP_H__
 #define __LIBBIP_H__
 
-#define LIBBIP_VERSION "1.2"
+#define LIBBIP_VERSION "1.3"
 
 #define VIDEO_X     176
 #define VIDEO_Y     176
@@ -66,6 +77,15 @@ v.1.0
 #ifndef false
 #define false 0
 #endif
+
+#ifndef offsetof
+#define offsetof(s, m) (int)&(((s *)0)->m)
+#endif
+
+#ifndef sizeof_member
+#define sizeof_member(s,m) ((int) sizeof(((s *)0)->m))
+#endif
+
 /* 
 Type    	  Size		Alignment
 			(bytes)     (bytes)
@@ -157,9 +177,10 @@ unsigned char	h24;
 #define	locale_es_ES	3082	//	испанский
 #define	locale_fr_FR	1036	//	французский
 #define	locale_de_DE	1031	//	немецкий
+#define	locale_el_GR	1032	//	греческий
 
 // язык установленный для меню мода, возвращаемый функцией get_stored_lang
-#define	OPT_LANG_COUNT	6		//	количество языков
+#define	OPT_LANG_COUNT	7		//	количество языков
 #define	OPT_LANG_AUTO	0x00	//	автовыбор по локали телефона
 #define	OPT_LANG_RUS	0x01	//	русский
 #define	OPT_LANG_ENG	0x02    //	английский
@@ -167,6 +188,7 @@ unsigned char	h24;
 #define	OPT_LANG_SPA	0x04    //	испанский
 #define	OPT_LANG_FRA	0x05    //	французский
 #define	OPT_LANG_DEU	0x06    //	немецкий
+#define	OPT_LANG_GRK	0x07    //	греческий
 
 // данные настроек системы ( функция get_generic_data / set_generic_data )
 #define GENERIC_DATA_LOCALE		36		//	локаль телефона
@@ -200,13 +222,11 @@ unsigned char	h24;
 
  
 struct menu_item_struct {
-//unsigned char 	index;		//	номер пункта меню
 	char		name[MAX_MENU_ITEM_NAME_LEN+1]; 		//	название пункта меню
 	void* 		show_func;		//	функция запуска
 	int 		item_color;		//	цвет пункта меню
 	int			item_style;		//	статус строки меню	
 	int 		item_param0;	//	произвольный параметр пункта меню
-//unsigned char	premium;		//	пункт премиум версии
 };
 
 struct menu_struct {
@@ -237,11 +257,12 @@ struct res_params_ {
   short height; 	//	высота в рх 	
 };
 
-#define INDEX_MAIN_RES	0xFFFF0000
+#define INDEX_MAIN_RES	((int)0xFFFF0000)
+#define ELF_INDEX_SELF	((int)0xFFFFFFFF)
 
 typedef struct {				//	структура запущенного процесса
 	unsigned int 	process_id;	//	идентификатор процесса, присваивается загрузчиком
-	int			index_listed;	//	индекс эльфа в списке загрузчика
+	int				index_listed;	//	индекс эльфа в списке загрузчика
 	void* 			base;		//	указатель на выделенную под процесс память
 	unsigned int	size;		//	количество выделенной под процесс памяти
 	void*			ret_f;		//	точка возврата процесса
@@ -303,6 +324,55 @@ short 			last_hr;
 unsigned char 	heart_rate;			//	частота, ударов/мин; >200 - значение не доступно
 unsigned char 	ret_code;			//	статус измерения 0-закончено, >0 измерение не закончено
 }  hrm_data_struct_legacy;
+
+
+//	навгационные данные (для функции get_navi_data)
+typedef struct {
+	int ready 		                        ; // Готовность данных: bit 0: давление ; bit 1: высота  ; bit 2: широта  ; bit 3: долгота
+	unsigned int pressure					; // значение давления в Паскалях
+	float altitude							; // значение высоты в метрах
+	signed int latitude						; // модуль значения долготы в градусах, умноженное на 3000000
+	int ns									; // ns: 0-северное полушарие; 1-южное
+	signed int longitude					; // модуль знаения долготы в градусах, умноженное на 3000000
+	int ew									; // ew: 2-западное полушарие; 3-восточное; 
+} navi_struct_;
+
+// полушария
+#define NAVI_NORTH_HEMISPHERE	0	//	северное полушарие
+#define NAVI_SOUTH_HEMISPHERE	1	//	южное полушарие
+#define NAVI_WEST_HEMISPHERE	2	//	западное полушарие
+#define NAVI_EAST_HEMISPHERE	3	//	воточное полушарие
+
+
+// макросы для проверки значения готовности
+#define IS_NAVI_PRESS_READY(navi) 		(navi & 0x01)	//	готовность данных атмосферного давления: 0 - не готов, 1 - готов
+#define IS_NAVI_GPS_READY(navi) 		(navi & 0x0E)	//	готовность координат: 0 - не готов, 1 - готов	
+#define IS_NAVI_GPS_ALT_READY(navi) 	(navi & 0x02)	//	готовность данных высоты (GPS): 0 - не готов, 1 - готов
+#define IS_NAVI_GPS_LAT_READY(navi) 	(navi & 0x04)	//	готовность данных широты (GPS): 0 - не готов, 1 - готов
+#define IS_NAVI_GPS_LONG_READY(navi) 	(navi & 0x08)	//	готовность данных долготы (GPS): 0 - не готов, 1 - готов
+
+// как правило данные высоты, широты и долготы готовы при фиксации GPS приемника, так что достаточно проверять 
+//	статус готовности GPS  - IS_NAVI_GPS_READY(navi) 
+
+//	Типы уведомлений
+#define NOTIFY_TYPE_NONE		0
+#define NOTIFY_TYPE_SMS			5
+#define NOTIFY_TYPE_EMAIL		6
+#define NOTIFY_TYPE_MICHAT		7
+#define NOTIFY_TYPE_FACEBOOK	8
+#define NOTIFY_TYPE_TWITTER		9
+#define NOTIFY_TYPE_MI			10
+#define NOTIFY_TYPE_WHATSAPP	12
+#define NOTIFY_TYPE_ALARM		16
+#define NOTIFY_TYPE_INSTAGRAM	18
+#define NOTIFY_TYPE_ALIPAY		22
+#define NOTIFY_TYPE_CALENDAR	27
+#define NOTIFY_TYPE_VIBER		29
+#define NOTIFY_TYPE_TELEGRAM	31
+#define NOTIFY_TYPE_SKYPE		33
+#define NOTIFY_TYPE_VK			34
+#define NOTIFY_TYPE_CALL		39
+#define NOTIFY_TYPE_LOW_BAT		42
 
 
 // Глобальные переменные
@@ -383,6 +453,8 @@ extern  void	vPortFree( void *pv );                                             
 extern	int		get_left_side_menu_active();                                              //	возвращает переменную left_side_menu_active
                                                                                           //	
 extern	int		get_current_date_time(struct datetime_* datetime);                        //	возвращает данные о текущей дате/времени
+extern	int		get_current_timestamp();    						          	          //	возвращает значение текущего UNIX timestamp
+
 extern  int 	show_watchface();                                                         //	процедура отображения циферблата
 extern  void 	show_big_digit(int color, const char * digits, int pos_x, unsigned int pos_y, int space); 	//	отображение цифр большим шрифтом
 extern	void 	vTaskDelay(int delay_ms);			                                      //	приостановить текущий процесс на время мс
@@ -406,16 +478,25 @@ extern void		send_host_app_msg (int msg);
 extern void 	send_host_app_data (short a1, short channel, unsigned int size, void *data, int a2);
 
 // проверка состояния системы
-extern int 		check_app_state(long long state);											//		проверка состояния системы
+extern int 		check_app_state(long long state);										//		проверка состояния системы
  
 extern int dispatch_left_side_menu(struct gesture_ * gest);								//		процедура разбора свайпов быстрого меню
 
 extern	void	stm32_soft_reset();														//		программная перезагрузка, включение часов длительным нажатием
-extern	int 	iwdg_reboot();																//		программная перезагрузка часов, часы включаются
+extern	int 	iwdg_reboot();															//		программная перезагрузка часов, часы включаются
 
-extern 	unsigned char 	get_last_heartrate();															//		получение измеренного последнего значения с датчика сердцебиения
-extern 	int		set_hrm_mode(int hrm_mode);													//	установка режима измерения пульса 0x20 - однократный
-extern  void* 	get_hrm_struct();															//	получение указателя на данные датчика сердца
+extern 	unsigned char 	get_last_heartrate();											//		получение измеренного последнего значения с датчика сердцебиения
+extern 	int		set_hrm_mode(int hrm_mode);												//		установка режима измерения пульса 0x20 - однократный
+extern  void* 	get_hrm_struct();														//		получение указателя на данные датчика сердца
+
+// Функции навигации
+extern	void switch_gps_pressure_sensors(int mode);					//	включение/отключение сенсоров GPS и барометра
+extern	navi_struct_* get_navi_data(navi_struct_ *navi_data);		//	получение данных GPS и барометра
+extern	int is_gps_fixed();											//	проверка готовности GPS
+
+// Функции создания нотификаций (всплывающих уведомлений)
+extern int add_notification(int notif_type, int timestamp, char *title, char *msg, char *app_name);	//	создание и добавление в список уведомлений нового уведомления
+extern int create_and_show_notification(int notif_type, char *title, char *msg, char *app_name);	//	создание и отображение созданного уведомления (остается в списке)
 
 
 // Функции библиотеки
@@ -440,10 +521,6 @@ extern	int 	dispatch_menu (struct menu_struct *	menu, void *param);             
 extern	int 	push_ret_f(struct menu_struct *	menu, void* ret_f);                       //	сохранение в стёке цепочки меню функции воврата на предыдущий пункт меню
 extern	void* 	pop_ret_f(struct menu_struct *	menu);                                    //	изъятие из стека цепочки меню функции воврата на предыдущий пункт меню
 
-// меню быстрого запуска
-extern 	int 	get_stored_left_side_function();                                          //	получение значения "быстрого" запуска
-extern 	int 	store_selected_left_side(int left_side);                                  //	запись значения "быстрого" запуска
-
 // функции загрузчика
 extern int 		load_elf_by_index(int index_listed, void* ret_f, unsigned int ret_param0, int argc, void** argv);      //	загрузка и запуск приложения по его индексу
 extern int 		load_elf_by_name(char* name, void* ret_f, unsigned int ret_param0, int argc, void** argv);             //	загрузка и запуск приложения по его имени
@@ -456,10 +533,10 @@ extern int 		ElfGetSettingsSize (int index_listed);                             
 extern int 		show_elf_res_by_id(int index_listed, int res_id, int pos_x, int pos_y); 	//	отображает на экране графический ресурс конкретного эльфа, содержащийся в секции .elf.resources
 																							//	нумерация ресурсов начинается с 0 для каждого эльфа  
 extern int 		get_res_params(int index_listed, int res_id, struct res_params_* res_params);//	возвращает структуру res_params_ с размерами графического ресурса																						
-extern int 		get_res_count(unsigned int index_listed);									// возвращает количество доступных ресурсов в источнике
+extern int 		get_res_count(int index_listed);									// возвращает количество доступных ресурсов в источнике
 extern int 		read_res_by_id (int res_id, int offset, void* buffer, int len); // чтение данных стандартного ресурса начиная с offset длиной len по его номеру res_id
-extern int 		read_elf_res_by_id (unsigned int index_listed, int res_id, int offset, void* buffer, int len);		// чтение данных ресурсов (стандартных и приложения) начиная с offset длиной len по его номеру res_id
-extern int		get_fw_version();															//	возврвщает версию прошивки 
+extern int 		read_elf_res_by_id (int index_listed, int res_id, int offset, void* buffer, int len);		// чтение данных ресурсов (стандартных и приложения) начиная с offset длиной len по его номеру res_id
+extern int		get_fw_version();															//	возвращает версию прошивки 
 
 // ресурсы
 #define	BIG_COLON		573
