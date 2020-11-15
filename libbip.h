@@ -9,6 +9,16 @@
 //  
 /////////////////////////////////////////////////////////////
 /****
+v.1.4. - 11.2020
+*	добавлена функция text_out_font - алиас к прощивочной функции show_big_digit с прототипом более соотвествующем её функциональности (спасибо x27)
+	функция show_big_digit объявлена устаревшей и будет удалена в будущих версиях библиотеки
+*	в функциях работы с ресурсами, такими как ElfGetSettingsSize, ElfReadSettings, ElfWriteSettings, show_elf_res_by_id, get_res_count, get_res_params и т.д. 
+	добавлен новый источник ресурсов - Шрифт (index_listed == INDEX_FONT_RES)
++	добавлена прошивоная функция int get_battery_charge(), производящая замер и возвращающая заряд батареи в %, а также два макроса 
+	IS_CHARGE_PLUGGED - возвращает 0 если часы не заряжаются, 1 если заряжаются
+	IS_CHARGE_COMPLETE	- возвращает 0 если часы не до конца заряжены, 1 если часы заряжены полностью и зарядное устройство не отключено
++	добавлены структуры данных передаваемые BipOS в приложение при отрисовке значков главного меню
+
 v.1.3. - 12.07.2020 
 +	добавлены новые функции прошивки: 
 		switch_gps_pressure_sensors, get_navi_data, is_gps_fixed	-	функции для раоты с  GPS и атмосферным давлением
@@ -17,7 +27,6 @@ v.1.3. - 12.07.2020
 +	доработаны функции работы с ресурсами ElfGetSettingsSize, ElfReadSettings, ElfWriteSettings, show_elf_res_by_id, get_res_count, get_res_params и т.д. 
 	теперь в качестве аргумента index_listed можно передавать ELF_INDEX_SELF для указания собственного индекса приложения.
 +	добавлена поддержка греческого языка приложениями BipOS
-
 
 v.1.2 - 06.01.2020
 +	добавлены функции прошивки:
@@ -51,7 +60,7 @@ v.1.0
 #ifndef __LIBBIP_H__
 #define __LIBBIP_H__
 
-#define LIBBIP_VERSION "1.3"
+#define LIBBIP_VERSION "1.4"
 
 #define VIDEO_X     176
 #define VIDEO_Y     176
@@ -198,7 +207,7 @@ unsigned char	h24;
 #define MAX_MENU_ITEM_NAME_LEN	64
 #define MAX_MENU_ENCLOSURE		15		//	максимальная вложенность меню
 #define ITEMS_ON_PAGE			3
-#define MAX_MENU_ITEMS_COUNT	15
+#define MAX_MENU_ITEMS_COUNT	55
 #define MAX_LINES_PER_ITEM		3
 //	параметры отображения пунктов меню
 #define MENU_H_MARGIN	10
@@ -213,14 +222,6 @@ unsigned char	h24;
 #define MENU_ITEM_STYLE_LOCKED		6		//	заблокирован		значок "замок".	
 #define MENU_ITEM_STYLE_DISABLED	7		//	пункт в данный момент не доступен	значок "Х"
 
-// "Быстрое" приложение (запуск при входе в боковое меню)
-#define LEFT_SIDE_APP_COUNT		4
-#define LEFT_SIDE_APP_NONE		0
-#define LEFT_SIDE_APP_CALC		1
-#define LEFT_SIDE_APP_CALEND	2
-#define LEFT_SIDE_APP_FLASH		3
-
- 
 struct menu_item_struct {
 	char		name[MAX_MENU_ITEM_NAME_LEN+1]; 		//	название пункта меню
 	void* 		show_func;		//	функция запуска
@@ -238,6 +239,7 @@ unsigned char				item_count;						//	количество пунктов мен�
 		int 				menu_level;						//	текущий уровень вложенности
 };
 
+#pragma pack(push, 1)		//	запретить выравнивание полей структуры
 struct res_struct {// sizeof=32+4
 char 			res_type[5];	//	NERES, HMRES
 char 			version;		//	 
@@ -247,17 +249,21 @@ char 			reserved_1[2];	//	FF FF
 unsigned int	reserved[4];	//  FF..FF
 unsigned int	count;			//		
 };
+#pragma pack(pop)
 
 #define RES_MAGIC		0xD71A09E8
 #define NERES_ADDRESS	0x2A0000
 
 // параметры графических ресурсов
+#pragma pack(push, 1)		//	запретить выравнивание полей структуры
 struct res_params_ {
   short width; 		//	ширина в рх
   short height; 	//	высота в рх 	
 };
+#pragma pack(push, 1)		//	запретить выравнивание полей структуры
 
 #define INDEX_MAIN_RES	((int)0xFFFF0000)
+#define INDEX_FONT_RES	((int)0xFFFF0001)
 #define ELF_INDEX_SELF	((int)0xFFFFFFFF)
 
 typedef struct {				//	структура запущенного процесса
@@ -268,10 +274,10 @@ typedef struct {				//	структура запущенного процесс�
 	void*			ret_f;		//	точка возврата процесса
 	unsigned int	ret_param0;	//	параметр функции возврата
 	void(*elf_finish)(void* param0);	//	указатель на процедуру завершения эльфа, сюда надо передать 
-	void(*entry_point)(void* param0);	//	указатель на процедуру запуска эльфа, точка входа. Param0 = указатель на структуру proc запущенного процесса 
+	int (*entry_point)(void* param0, char** argv);	//	указатель на процедуру запуска эльфа, точка входа. Param0 = указатель на структуру proc запущенного процесса 
 	void*			param;		//	пользовательский параметр, можно хранить что угодно, например указатели вместо temp_buf_2 для фоновых процессов				
 	int				argc;		//	количество параметров при запуске эльфа
-	void**			argv;		//	параметры при запуске эльфа
+	char**			argv;		//	параметры при запуске эльфа
 } Elf_proc_;
 
 // версии прошивок
@@ -374,6 +380,51 @@ typedef struct {
 #define NOTIFY_TYPE_CALL		39
 #define NOTIFY_TYPE_LOW_BAT		42
 
+// тип шрифта для функции text_out_font
+#define FONT_DIGIT_LED_0					0
+#define FONT_DIGIT_SQUARE_MINI_1			1
+#define FONT_DIGIT_MIDDLE_2					2
+#define FONT_DIGIT_BIG_3					3
+#define FONT_DIGIT_BIG_RED_4				4
+#define FONT_LETTER_MIDDLE_5				5
+#define FONT_LETTER_BIG_6					6
+#define FONT_DIGIT_ROUND_BIG_7				7
+#define FONT_DIGIT_MIDDLE_8					8
+#define FONT_DIGIT_BIG_9					9
+#define FONT_FONT_DIGIT_SQUARE_MIDDLE_10	10
+#define FONT_DIGIT_SMALL_11					11
+#define FONT_DIGIT_TINY_12					12
+#define FONT_DIGIT_MICRO_13					13
+#define FONT_DIGIT_TINY_14					14
+#define FONT_DIGIT_SQUARE_MICRO_15			15
+
+
+// структура хранения номеров ресурсов при передаче в качестве параметров 
+struct icons_{
+	short icon_main;
+	short icon_label_ru;
+	short icon_label_en;	
+};
+
+// структура отрисовки значков главного меню
+struct menu_items_draw_{
+		struct regmenu_* regmenu;	//	указатель на структуру нового элемента
+		int	prev_screen;			//	предыдущий экран
+		int	prev_sscreen;			//	предыдущий подэкран
+		int	screen;					//	текущий подэкран
+		struct icons_ icon_res;	//	указатель на номера ресурсов иконок меню
+};
+
+// значки главного меню
+#define MAIN_MENU_STATUS	2
+#define MAIN_MENU_ACTIVITY	3
+#define MAIN_MENU_WEATHER	4
+#define MAIN_MENU_ALARM		5
+#define MAIN_MENU_TIMER		6
+#define MAIN_MENU_COMPASS	7
+#define MAIN_MENU_OPTIONS	8
+#define MAIN_MENU_ALIPAY	9
+
 
 // Глобальные переменные
 unsigned char get_var_current_screen();                                  //	активный номер экрана
@@ -440,7 +491,7 @@ extern	int 	_memcpy (void *dest, const void *srcptr, int num);                  
 extern	int		_memcmp	(const void* p1, const void* p2, int size);                       //	встроенная в прошивку функция memcmp
 
 extern 	int		get_tick_count();														  //	возвращает количество тиков системного таймера с момента перезагрузки (примерно 510 тиков в секунду)
-extern 	int		set_update_period (int cmd, int period); 								  //    запуск таймера текущего экрана. колбэк таймера screen_job_func; cmd=0 остановить таймер, cmd=1 взвод таймера на количество мс равное period 
+extern 	int		set_update_period (int enable, int period); 								  //    запуск таймера текущего экрана. колбэк таймера screen_job_func; cmd=0 остановить таймер, cmd=1 взвод таймера на количество мс равное period 
 extern	int 	set_display_state_value(int state_1, int state);						  //	установка параметров экрана
 extern	int 	set_close_timer(int delay_s);											  //	
 
@@ -456,7 +507,8 @@ extern	int		get_current_date_time(struct datetime_* datetime);                  
 extern	int		get_current_timestamp();    						          	          //	возвращает значение текущего UNIX timestamp
 
 extern  int 	show_watchface();                                                         //	процедура отображения циферблата
-extern  void 	show_big_digit(int color, const char * digits, int pos_x, unsigned int pos_y, int space); 	//	отображение цифр большим шрифтом
+extern  void 	__attribute__ ((deprecated("show_big_digit is deprecated use text_out_font instead"))) show_big_digit(int color, const char * digits, int pos_x, unsigned int pos_y, int space); 	//	отображение цифр большим шрифтом
+extern  void 	text_out_font(int font, const char * text, int pos_x, unsigned int pos_y, int space); 	//	отображение цифр альтернативным шрифтом (алиас к функции show_big_digit), примеры шрифтов см. https://github.com/freebip/fwhack/blob/master/show_big_digit.md
 extern	void 	vTaskDelay(int delay_ms);			                                      //	приостановить текущий процесс на время мс
                                                                                           //	
 extern	int		read_flash (int addr, void *data, int size);                              //	чтение из флэш памяти
@@ -498,6 +550,11 @@ extern	int is_gps_fixed();											//	проверка готовности GP
 extern int add_notification(int notif_type, int timestamp, char *title, char *msg, char *app_name);	//	создание и добавление в список уведомлений нового уведомления
 extern int create_and_show_notification(int notif_type, char *title, char *msg, char *app_name);	//	создание и отображение созданного уведомления (остается в списке)
 
+// Функция проверки заряда батареи
+int get_battery_charge();	//	возвращает заряд батареи в %
+#define IS_CHARGE_PLUGGED	get_app_state(APP_STATE_CHARGE_PLUGGED)		//	макрос, возвращает 0 если часы не заряжаются, 1 если заряжаются
+#define IS_CHARGE_COMPLETE	get_app_state(APP_STATE_CHARGE_COMPLETE)	//	макрос, возвращает 0 если часы не до конца заряжены, 1 если часы заряжены полностью и зарядное устройство не отключено
+
 
 // Функции библиотеки
 // работа с зыком
@@ -507,7 +564,7 @@ extern 	int		store_selected_lang(int lang);                                     
 extern	int		get_system_locale();                                                      //	получение системной локали
 
 // прочие функции
-//	рисование прогрессбара по сереине экрана
+//	рисование прогрессбара по середине экрана
 extern 	void 	draw_progressbar(int pos_y, int width, int height, int color_bg, int color_fg, int progress_max, int progress, int border, int repaint, const char* text);
 extern 	void 	dump_mem (void * address, int len);                                       //	дамп памяти в лог устройства в формате ti-txt
 extern 	int 	get_res_count();                                                          //	получение количества ресурсов
