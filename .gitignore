@@ -3,3 +3,7 @@
 *.map
 *.o
 foo
+build/
+html/
+latex/
+doxygen.conf

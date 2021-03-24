@@ -1,14 +1,24 @@
 /////////////////////////////////////////////////////////////
 //
-//  FUNCTIONS LIBRARY v.1.3
+//  FUNCTIONS LIBRARY v.1.5
 //	for Amazfit Bip
-//  (C) Maxim Volkov  2020 <Maxim.N.Volkov@ya.ru>
+//  (C) Maxim Volkov  2021 <Maxim.N.Volkov@ya.ru>
 //
 //	SDK BipOS 
 //	Библиотека функций для загрузчика приложений BipOS
 //  
 /////////////////////////////////////////////////////////////
 /****
+v.1.5. - 03.2021
++	добавлен макрос IS_BT_CONNECTED возвращает 0 если часы не подключены к телефону и 1 если подключены
++	добавлены определения констрант для определения статуса зарядки часов, а также команд bluetooth для функции send_host_app_msg
++	добавлены прошивочные функции f_log_flush, set_backlight 
++	изменена работа загрузчика в части подмены прокси-адресов функций на реальные прошивочные адреса. Теперь реальные адреса прошивочных функций 
+	не храняся в загрузчике, а размещены в специальном ресурсе, который можно разместить в ресурсах или шрифтах часов. Это позволит во-первых
+	высвободить место для кода BipOS для дальнейшего развития, а также позволит добавлять новые прошивочные функции в BipOS без дополнительного релиза 
+	патча BipOS. Для добавления новых функций, которые можно использовать в своих приложениях, достаточно будет обновить ресурс с прошивочными функциями.
+
+
 v.1.4. - 11.2020
 *	добавлена функция text_out_font - алиас к прощивочной функции show_big_digit с прототипом более соотвествующем её функциональности (спасибо x27)
 	функция show_big_digit объявлена устаревшей и будет удалена в будущих версиях библиотеки
@@ -60,7 +70,7 @@ v.1.0
 #ifndef __LIBBIP_H__
 #define __LIBBIP_H__
 
-#define LIBBIP_VERSION "1.4"
+#define LIBBIP_VERSION "1.5"
 
 #define VIDEO_X     176
 #define VIDEO_Y     176
@@ -201,6 +211,7 @@ unsigned char	h24;
 
 // данные настроек системы ( функция get_generic_data / set_generic_data )
 #define GENERIC_DATA_LOCALE		36		//	локаль телефона
+#define GENERIC_DATA_DND_MODE	17		//	настройка режима "Не беспокоить" (DND)
 
 //  структура меню
 //	меню настроек 
@@ -222,8 +233,47 @@ unsigned char	h24;
 #define MENU_ITEM_STYLE_LOCKED		6		//	заблокирован		значок "замок".	
 #define MENU_ITEM_STYLE_DISABLED	7		//	пункт в данный момент не доступен	значок "Х"
 
+
+// коды ошибок загрузчика
+#define ERROR_NONE						 0
+#define ERROR_BAD_RES_MAGIC				-1
+#define ERROR_BAD_ELF_MAGIC				-2
+#define ERROR_SEC_NOT_FOUND 			-3
+#define ERROR_ELF_NOT_FOUND 			-4
+#define ERROR_RES_OUT_OF_BOUNDS 		-5
+#define ERROR_RES_INV_FORMAT 			-6
+#define ERROR_TOO_MACH_RUN 				-7
+#define ERROR_TOO_MACH_PSEG	 			-8
+#define ERROR_MALLOC_FAILED	 			-9
+#define ERROR_LIB_FUNC_NOT_FOUND		-10
+#define ERROR_UNKNOWN_RELOC_TYPE		-11
+#define ERROR_UNKNOWN_PSEG_TYPE			-12
+#define ERROR_FONT_INV_FORMAT			-13
+#define ERROR_FONT_NO_RES				-14
+
+// ресурсы
+// ресурсы с номерами до 559 включительно одинаковые для всех версий прошивок и ресурсов
+#define ICON_SUNNY			71
+#define MENU_ITEM_ARROW		72
+#define CHECK_BOX_OFF		73
+#define CHECK_BOX_ON		74
+#define ICON_DISABLED		75
+#define ICON_TOGGLE_OFF		76
+#define ICON_TOGGLE_ON		77
+#define MENU_ITEM_LOCKED	103
+#define ICON_ALARM			227
+#define	ICON_CALEND			228
+#define ICON_RECYCLE		293
+#define ARROW_DOWN			316
+#define ARROW_UP			318
+#define PAGE_UP_ARROW		408
+#define PAGE_DOWN_ARROW		407
+#define ICON_CANCEL_RED		416
+#define ICON_OK_GREEN		417
+
+
 struct menu_item_struct {
-	char		name[MAX_MENU_ITEM_NAME_LEN+1]; 		//	название пункта меню
+	char*		name; 			//	указатель на строку название пункта меню
 	void* 		show_func;		//	функция запуска
 	int 		item_color;		//	цвет пункта меню
 	int			item_style;		//	статус строки меню	
@@ -247,7 +297,7 @@ char 			magic[4];		//	E8 09 1A D7 = 0xD71A09E8
 char			reserved_0[4];	//	03 00 00 00
 char 			reserved_1[2];	//	FF FF
 unsigned int	reserved[4];	//  FF..FF
-unsigned int	count;			//		
+		 int	count;			//		
 };
 #pragma pack(pop)
 
@@ -260,7 +310,7 @@ struct res_params_ {
   short width; 		//	ширина в рх
   short height; 	//	высота в рх 	
 };
-#pragma pack(push, 1)		//	запретить выравнивание полей структуры
+#pragma pack(pop)		//	запретить выравнивание полей структуры
 
 #define INDEX_MAIN_RES	((int)0xFFFF0000)
 #define INDEX_FONT_RES	((int)0xFFFF0001)
@@ -284,12 +334,10 @@ typedef struct {				//	структура запущенного процесс�
 #define LATIN_1_1_5_12		11512
 #define LATIN_1_1_5_16		11516
 #define LATIN_1_1_5_36		11536
+#define LATIN_1_1_6_48		11648
 #define LATIN_1_1_5_56		11556
 #define NOT_LATIN_1_1_2_05	11205
 #define UNI_LATIN			55555
-
-// статусы функции get_app_state
-#define APP_STATE_BT_CON		0x200
 
 
 // структура данных содержащая информацию будильника
@@ -412,7 +460,7 @@ struct menu_items_draw_{
 		int	prev_screen;			//	предыдущий экран
 		int	prev_sscreen;			//	предыдущий подэкран
 		int	screen;					//	текущий подэкран
-		struct icons_ icon_res;	//	указатель на номера ресурсов иконок меню
+		struct icons_ icon_res;		//	указатель на номера ресурсов иконок меню
 };
 
 // значки главного меню
@@ -424,6 +472,43 @@ struct menu_items_draw_{
 #define MAIN_MENU_COMPASS	7
 #define MAIN_MENU_OPTIONS	8
 #define MAIN_MENU_ALIPAY	9
+
+// статусы функции get_app_state
+#define APP_STATE_CHARGE_PLUGGED	0x10
+#define APP_STATE_BT_CONNECTED		0x200
+#define APP_STATE_CHARGE_COMPLETE	0x1000
+
+// команды bluetooth для функции send_host_app_msg
+#define	CMD_FELL_ASLEEP			0x01
+#define	CMD_WOKE_UP				0x02
+#define	CMD_STEPSGOAL_REACHED	0x03
+#define	CMD_BUTTON_PRESSED 		0x04
+#define	CMD_FIND_PHONE_START	0x08
+#define	CMD_ALARM_TOGGLED 		0x0A
+#define	CMD_BUTTON_PRESSED_LONG 0x0B
+#define	CMD_TICK_30MIN			0x0E
+#define	CMD_FIND_PHONE_STOP 	0x0F
+#define	CMD_MUSIC_CONTROL		0xFE
+
+// команды управления плеером для CMD_MUSIC_CONTROL
+#define	CMD_MUSIC_PLAY			0
+#define	CMD_MUSIC_PAUSE			1
+#define	CMD_MUSIC_NEXT			3
+#define	CMD_MUSIC_PREV			4
+#define	CMD_MUSIC_VOL_UP		5
+#define	CMD_MUSIC_VOL_DOWN		6
+#define	CMD_MUSIC_AMC_ENABLE	0xE0
+#define	CMD_MUSIC_AMC_DISABLE 	0xE1	
+
+
+#define IS_CHARGE_PLUGGED	get_app_state(APP_STATE_CHARGE_PLUGGED)		//	макрос, возвращает 0 если часы не заряжаются, 1 если заряжаются
+#define IS_CHARGE_COMPLETE	get_app_state(APP_STATE_CHARGE_COMPLETE)	//	макрос, возвращает 0 если часы не до конца заряжены, 1 если часы заряжены полностью и зарядное устройство не отключено
+#define IS_BT_CONNECTED	check_app_state(APP_STATE_BT_CONNECTED)			//	макрос, возвращает 0 если часы не подключены к bluetooth, 1 если подключены 
+
+//	режим DND Не беспокоить для функций get_generic_data и set_generic_data
+#define DND_MODE_OFF	0
+#define DND_MODE_ON		1
+#define DND_MODE_AUTO	2
 
 
 // Глобальные переменные
@@ -496,6 +581,7 @@ extern	int 	set_display_state_value(int state_1, int state);						  //	уста�
 extern	int 	set_close_timer(int delay_s);											  //	
 
 extern 	int 	log_printf(int debug_level, const char *format, ...); 					  //	запись в лог устройства, debug_level=5
+extern  int 	f_log_flush(char* msg);													  //	сброс буффера лога на флэш, можно указать сообщение
 extern	int 	vibrate(int count, int on_ms, int off_ms);								  //	вибрация (фоновая)
 
 extern	void* 	_pvPortMalloc (int size);                                                 //	выделение памяти прошивочная функция
@@ -519,11 +605,12 @@ extern	int		set_generic_data(int info, void *buffer);                           
                                                                                           //	
 extern	int		set_backlight_state(int state);                                           //	включение/отключение подсветки дисплея
 extern	int		set_backlight_percent(int percent);                                       //	установка яркости дисплея в % (из ряда значений 0, 10, 20, 40, 60, 90)
-extern 	int		get_backlight_value();                                                    //	
+extern 	int		get_backlight_value();                                                    //	получение из настроек уровня яркости (0..5)
+extern	void	set_backlight();														  //	установка уровн яркости из настроек и включение подсветки
 
 // случайные числа
-extern int 		_rand();																		  //	получение случайного числа	
-extern void 	_srand(unsigned int seed);													  // 	инициализация генератора случайных чисел
+extern int 		_rand();																//	получение случайного числа	
+extern void 	_srand(unsigned int seed);												  // 	инициализация генератора случайных чисел
 
 // протокол общения с телефоном
 extern void		send_host_app_msg (int msg);
@@ -551,10 +638,11 @@ extern int add_notification(int notif_type, int timestamp, char *title, char *ms
 extern int create_and_show_notification(int notif_type, char *title, char *msg, char *app_name);	//	создание и отображение созданного уведомления (остается в списке)
 
 // Функция проверки заряда батареи
-int get_battery_charge();	//	возвращает заряд батареи в %
-#define IS_CHARGE_PLUGGED	get_app_state(APP_STATE_CHARGE_PLUGGED)		//	макрос, возвращает 0 если часы не заряжаются, 1 если заряжаются
-#define IS_CHARGE_COMPLETE	get_app_state(APP_STATE_CHARGE_COMPLETE)	//	макрос, возвращает 0 если часы не до конца заряжены, 1 если часы заряжены полностью и зарядное устройство не отключено
+extern int get_battery_charge();	//	возвращает заряд батареи в %
 
+
+//	экран DND
+extern void silence_page_create_frame();
 
 // Функции библиотеки
 // работа с зыком
@@ -594,26 +682,6 @@ extern int 		get_res_count(int index_listed);									// возвращает к
 extern int 		read_res_by_id (int res_id, int offset, void* buffer, int len); // чтение данных стандартного ресурса начиная с offset длиной len по его номеру res_id
 extern int 		read_elf_res_by_id (int index_listed, int res_id, int offset, void* buffer, int len);		// чтение данных ресурсов (стандартных и приложения) начиная с offset длиной len по его номеру res_id
 extern int		get_fw_version();															//	возвращает версию прошивки 
-
-// ресурсы
-#define	BIG_COLON		573
-#define ICON_RECYCLE	293
-#define ICON_ALARM		227
-#define	ICON_CALEND		228
-#define ARROW_UP		318
-#define ARROW_DOWN		316
-#define CHECK_BOX_ON	74
-#define CHECK_BOX_OFF	73
-#define PAGE_UP_ARROW	408
-#define PAGE_DOWN_ARROW	407
-#define ICON_CANCEL_RED	416
-#define ICON_OK_GREEN	417
-#define MENU_ITEM_ARROW	72
-#define ICON_DISABLED	75
-#define ICON_TOGGLE_ON	77
-#define ICON_TOGGLE_OFF	76
-#define MENU_ITEM_LOCKED 103
-#define ICON_SUNNY		71
 
 #endif
 
