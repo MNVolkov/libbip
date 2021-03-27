@@ -6,4 +6,4 @@ foo
 build/
 html/
 latex/
-doxygen.conf
+Doxyfile

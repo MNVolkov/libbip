@@ -44,26 +44,27 @@ rem @%AS% -I %COMPILERPATH% %AS_OPT% -o import.o import.s
 
 @SET PARTNAME=Library
 rem @echo Compiling %PARTNAME%
-SET BUILD_DIR=build
+SET BUILD_DIR=tmp
 if not exist %BUILD_DIR% mkdir %BUILD_DIR%
 echo.
 
-for /d %%B in ("src\*latin*", "src\tonlesap*") do (
+for /d %%B in ("src\*latin*", "src\tonlesap*", "src\proxy") do (
 SET TARGET=%%~nxB
 echo.
-@call :echoColor 0D "Compiling target version: !TARGET!" 1
+@call :echoColor 0D "Compiling target version: "
+@call :echoColor 0E "!TARGET!" 1
 SET "FW_AS_OPT="
-if 		  !TARGET!==latin_1.1.5.36 (
+if 		  "!TARGET!"=="latin_1.1.5.36" (
 @set FW_AS_OPT=--defsym FW_VERSION=11536 
-) else if !TARGET!==latin_1.1.6.48 (
+) else if "!TARGET!"=="latin_1.1.6.48" (
 @set FW_AS_OPT=--defsym FW_VERSION=11648
-) else if !TARGET!==latin_1.1.5.12 (
+) else if "!TARGET!"=="latin_1.1.5.12" (
 @set FW_AS_OPT=--defsym FW_VERSION=11512
-) else if !TARGET!==not_latin_1.1.2.05 (
+) else if "!TARGET!"=="not_latin_1.1.2.05" (
 @set FW_AS_OPT=--defsym FW_VERSION=11205 
-) else if !TARGET!==tonlesap_2.1.1.50 (
+) else if "!TARGET!"=="tonlesap_2.1.1.50" (
 @set FW_AS_OPT=--defsym FW_VERSION=21150 
-) else if !TARGET!==proxy (
+) else if "!TARGET!"=="proxy" (
 @set FW_AS_OPT=--defsym FW_VERSION=0xFACE 
 ) else (
 @call :echoColor 0C "FW Version is unknown" 1
@@ -79,26 +80,32 @@ SET FILES_TO_ARCH=%BUILD_DIR%\!TARGET!_import.o
 @set TARGET_FW_VERSION_GCC=!TARGET!
 @set TARGET_FW_VERSION_GCC=!TARGET_FW_VERSION_GCC:.=_!
 @call :upperCase !TARGET_FW_VERSION_GCC! TARGET_FW_VERSION_GCC
-SET GCC_OPT_TARGET=!GCC_OPT! -DFW_VERSION=!TARGET_FW_VERSION_GCC! -DLIB_BIP_H=\"..\/libbip\/%%B\/fw_spec.h\"
+SET GCC_OPT_TARGET=!GCC_OPT! -DFW_VERSION=!TARGET_FW_VERSION_GCC! -DLIB_BIP_H=\"!TARGET!\fw_spec.h\"
 
-@for  %%f in (*.c) do ( 
-@call :echoColor 07 "%%~nf.c"
-@!GCC! !GCC_OPT_TARGET! -o "%BUILD_DIR%\!TARGET!_%%~nf.o" %%~nf.c
-@if errorlevel 1 goto :error
-@SET FILES_TO_ARCH=!FILES_TO_ARCH! "%BUILD_DIR%\!TARGET!_%%~nf.o"
-@call :echoColor 0A "...OK" 1
-)
 
-if "!TARGET!"=="proxy" (
-if not exist lib mkdir lib
-@call :echoColor 09 "Bulding libbip.a"
-@%AR% rsc %AR_OPT% -o lib\libbip.a !FILES_TO_ARCH! 
-@if errorlevel 1 goto :error
-@call :echoColor 0A "...OK" 1
-)
 
 if not "!TARGET!"=="proxy" (
-@call :echoColor 09 "Building relocation tables"
+@for %%F in ("src\*.c") do ( 
+@call :echoColor 07 "%%~nxF"
+@!GCC! !GCC_OPT_TARGET! -o "%BUILD_DIR%\!TARGET!_%%~nF.o" "%%F"
+@if errorlevel 1 goto :error
+@SET FILES_TO_ARCH=!FILES_TO_ARCH! "%BUILD_DIR%\!TARGET!_%%~nF.o"
+@call :echoColor 0A "...OK" 1
+)
+)
+
+SET LIBNAME=libbip_!TARGET!.a
+if "!TARGET!"=="proxy" SET LIBNAME=libbip.a
+if not exist lib mkdir lib
+if exist lib\!LIBNAME! del lib\!LIBNAME!
+@call :echoColor 07 "Bulding !LIBNAME!"
+@%AR% rsc %AR_OPT% -o lib\!LIBNAME! !FILES_TO_ARCH! 
+@if errorlevel 1 goto :error
+@call :echoColor 0A "...OK" 1
+
+
+if not "!TARGET!"=="proxy" (
+@call :echoColor 07 "Building relocation tables"
 
 !LD! --defsym main=_start %BUILD_DIR%\!TARGET!_import.o  -o %BUILD_DIR%\!TARGET!_import.elf
 if errorlevel 1 goto :error
@@ -120,18 +127,21 @@ rem if errorlevel 1 goto :error
 
 )
 
-echo.
-if exist "lib\libbip.a" (
-@call :echoColor 02 "Copy libbip.a" 1
-copy /Y "lib\libbip.a" "d:\Dev\AmazfitBip_FW\soft\Patch\1\libbip" > nul
-)
+rmdir %BUILD_DIR% /S /Q
 
-@call :echoColor 02 "Copy reloc" 1
-copy /b /Y reloc\reloc_*.bin "d:\Dev\AmazfitBip_FW\soft\Patch\1\libbip" > nul
-
-echo.
-@call :echoColor 0E "================================" 1
-@call :echoColor 0A "Build completed." 1
+rem Копирование библиотеки и таблиц релокации в папку для сборки приложений (при необходимости)
+rem echo.
+rem if exist "lib\libbip.a" (
+rem @call :echoColor 02 "Copy libbip.a" 1
+rem copy /Y "lib\libbip.a" "d:\Dev\AmazfitBip_FW\soft\Patch\1\libbip" > nul
+rem )
+rem 
+rem @call :echoColor 02 "Copy reloc" 1
+rem copy /b /Y reloc\reloc_*.bin "d:\Dev\AmazfitBip_FW\soft\Patch\1\libbip" > nul
+rem 
+rem echo.
+rem @call :echoColor 0E "================================" 1
+rem @call :echoColor 0A "Build completed." 1
 
 :done
 
