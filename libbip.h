@@ -473,7 +473,7 @@ struct menu_items_draw_{
 #define MAIN_MENU_OPTIONS	8
 #define MAIN_MENU_ALIPAY	9
 
-// статусы функции get_app_state
+// статусы функции check_app_state
 #define APP_STATE_CHARGE_PLUGGED	0x10
 #define APP_STATE_BT_CONNECTED		0x200
 #define APP_STATE_CHARGE_COMPLETE	0x1000
@@ -501,8 +501,8 @@ struct menu_items_draw_{
 #define	CMD_MUSIC_AMC_DISABLE 	0xE1	
 
 
-#define IS_CHARGE_PLUGGED	get_app_state(APP_STATE_CHARGE_PLUGGED)		//	макрос, возвращает 0 если часы не заряжаются, 1 если заряжаются
-#define IS_CHARGE_COMPLETE	get_app_state(APP_STATE_CHARGE_COMPLETE)	//	макрос, возвращает 0 если часы не до конца заряжены, 1 если часы заряжены полностью и зарядное устройство не отключено
+#define IS_CHARGE_PLUGGED	check_app_state(APP_STATE_CHARGE_PLUGGED)		//	макрос, возвращает 0 если часы не заряжаются, 1 если заряжаются
+#define IS_CHARGE_COMPLETE	check_app_state(APP_STATE_CHARGE_COMPLETE)	//	макрос, возвращает 0 если часы не до конца заряжены, 1 если часы заряжены полностью и зарядное устройство не отключено
 #define IS_BT_CONNECTED	check_app_state(APP_STATE_BT_CONNECTED)			//	макрос, возвращает 0 если часы не подключены к bluetooth, 1 если подключены 
 
 //	режим DND Не беспокоить для функций get_generic_data и set_generic_data
