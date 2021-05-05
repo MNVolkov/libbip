@@ -160,7 +160,7 @@ import 0x08066A6C store_and_enable_alarm            alias_store_and_enable_alarm
 
 @работа с флэш памятью                              alias_ятью
 import 0x08044BBC read_flash                        alias_read_flash
-import 0x08044CF0 write_flash                       alias_write_flash
+import 0x08044CF0 _write_flash                       alias__write_flash		@ функция удалена по соображениям безопасности
 
 import 0x08046ECC get_generic_data                  alias_get_generic_data 
 import 0x0805C5E4 set_generic_data                  alias_set_generic_data 
