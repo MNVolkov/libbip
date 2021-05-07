@@ -713,6 +713,7 @@ extern int 		get_res_count(int index_listed);									// возвращает к
 extern int 		read_res_by_id (int res_id, int offset, void* buffer, int len); // чтение данных стандартного ресурса начиная с offset длиной len по его номеру res_id
 extern int 		read_elf_res_by_id (int index_listed, int res_id, int offset, void* buffer, int len);		// чтение данных ресурсов (стандартных и приложения) начиная с offset длиной len по его номеру res_id
 extern int		get_fw_version();															//	возвращает версию прошивки 
+extern int		get_bipos_build();															//	возвращает номер сборки проекта BipOS (нумерация сквозная)
 
 #endif
 

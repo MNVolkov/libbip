@@ -176,6 +176,8 @@ import 0xFADE001A push_ret_f
 import 0xFADE001C pop_ret_f
 import 0xFADE0042 pvPortMalloc
 import 0xFADE0044 get_fw_version
+import 0xFADE004A write_flash
+import 0xFADE004C get_bipos_build
 
 @@ options.c
 @ не нужны в пользовательских приложениях
