@@ -167,7 +167,7 @@ import 0x08037B60 alarm_set_on_click 				alias_alarm_set_on_click 				@	@	clock_
 import 0x08063660 store_and_enable_alarm			alias_store_and_enable_alarm			@	@	store_and_enable_alarm 
 
 @работа с флэш памятью                              
-import 0x08041B78 write_flash						alias_write_flash						@	@	flash_update_part_sector
+import 0x08041B78 _write_flash						alias__write_flash		@ функция удалена по соображениям безопасности				@	@	flash_update_part_sector
 import 0x08041A44 read_flash						alias_read_flash						@	@	flash_read
 
 import 0x08043D8C get_generic_data 					alias_get_generic_data 					@	@	get_generic_data

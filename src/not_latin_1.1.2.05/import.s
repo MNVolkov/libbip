@@ -160,7 +160,7 @@ import 0x0804F6B8 show_main_menu_item                  alias_show_main_menu_item
 @import 0x080451E0 get_battery_charge_percent           alias_get_battery_charge_percent 
 
 @работа с флэш памятью                                 
-import 0x080438F0 write_flash                          alias_write_flash
+import 0x080438F0 _write_flash                          alias__write_flash	@ функция удалена по соображениям безопасности
 import 0x080437BC read_flash                           alias_read_flash
 
 import 0x0804584C get_generic_data                     alias_get_generic_data

@@ -164,7 +164,7 @@ import 0x0803869C dispatch_alarm_set                		alias_dispatch_alarm_set
 import 0x08063800 store_and_enable_alarm            		alias_store_and_enable_alarm 
 															
 @работа с флэш памятью                              		
-import 0x08042504 write_flash                       		alias_write_flash
+import 0x08042504 _write_flash                       		alias__write_flash	@ функция удалена по соображениям безопасности
 import 0x080423D0 read_flash                        		alias_read_flash
 															
 import 0x08044700 get_generic_data                  		alias_get_generic_data 

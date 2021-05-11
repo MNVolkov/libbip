@@ -119,7 +119,7 @@ import alias_store_and_enable_alarm			store_and_enable_alarm
 
 @работа с флэш памятью
 import alias_read_flash						read_flash
-import alias_write_flash					write_flash
+@import alias_write_flash					write_flash			@ функция удалена по соображениям безопасности
 
 import alias_get_generic_data				get_generic_data 
 import alias_set_generic_data				set_generic_data 
@@ -176,6 +176,8 @@ import 0xFADE001A push_ret_f
 import 0xFADE001C pop_ret_f
 import 0xFADE0042 pvPortMalloc
 import 0xFADE0044 get_fw_version
+import 0xFADE004A write_flash
+import 0xFADE004C get_bipos_build
 
 @@ options.c
 @ не нужны в пользовательских приложениях
