@@ -515,6 +515,13 @@ struct menu_items_draw_{
 #define DND_MODE_AUTO	2
 
 
+//!	определения номеров сенсоров для функции sensors_enable
+#define SENSOR_TYPE_ACCEL		1
+#define SENSOR_TYPE_COMPASS		3
+#define SENSOR_TYPE_PRESSURE	7
+#define SENSOR_TYPE_GPS			8
+
+
 //! Глобальные переменные
 unsigned char get_var_current_screen();                                  //!<	получение активного номера экрана
 unsigned char set_var_current_screen(unsigned char val); 			     //!<	запись активного номера экрана
@@ -659,9 +666,16 @@ extern 	int		set_hrm_mode(int hrm_mode);												//		установка ре�
 extern  void* 	get_hrm_struct();														//		получение указателя на данные датчика сердца
 
 // Функции навигации
-extern	void switch_gps_pressure_sensors(int mode);					//	включение/отключение сенсоров GPS и барометра
-extern	navi_struct_* get_navi_data(navi_struct_ *navi_data);		//	получение данных GPS и барометра
-extern	int is_gps_fixed();											//	проверка готовности GPS
+extern	void switch_gps_pressure_sensors(int mode);										//	включение/отключение сенсоров GPS и барометра
+extern	navi_struct_* get_navi_data(navi_struct_ *navi_data);							//	получение данных GPS и барометра
+extern	int is_gps_fixed();																//	проверка готовности GPS
+
+// Функции компаса
+extern	short	compass_get_degree();													//	получение текущего азимута компаса
+extern	bool	compass_need_calibration();												//	получение статуса необходимости калибровки компаса
+extern	void	compass_task_resume();													//	выполнение инициализации компаса
+extern	int 	sensors_enable(int sensor, int enable);									//	включение/отключение сенсоров
+
 
 // Функции создания нотификаций (всплывающих уведомлений)
 extern int add_notification(int notif_type, int timestamp, char *title, char *msg, char *app_name);	//	создание и добавление в список уведомлений нового уведомления

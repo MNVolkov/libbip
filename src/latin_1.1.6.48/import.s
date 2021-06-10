@@ -203,7 +203,10 @@ import 0x080590CA create_and_show_notification		alias_create_and_show_notificati
 import 0x08043580 get_battery_charge				alias_get_battery_charge				@	@	get_current_capacity
 import 0x0805AC1C silence_page_create_frame			alias_silence_page_create_frame			@	@	silence_page_create_frame
 
-
+import 0x08038600 compass_get_degree				alias_compass_get_degree				@	compass_get_degree		
+import 0x0803882C compass_need_calibration			alias_compass_need_calibration			@	compass_need_calibration
+import 0x08038FDC compass_task_resume				alias_compass_task_resume				@	compass_task_resume						
+import 0x08058D60 sensors_enable					alias_sensors_enable					@	sensors_enable		
 
 
 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@

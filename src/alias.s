@@ -116,3 +116,11 @@
 .set alias_silence_page_create_frame   		,	0xFACE00C8
 .set alias_set_backlight		           	,	0xFACE00CA 
 
+.set alias_compass_get_degree			   	,	0xFACE00CC 
+.set alias_compass_need_calibration	        ,	0xFACE00CE 
+.set alias_compass_task_resume		        ,	0xFACE00C0 
+.set alias_sensors_enable				    ,	0xFACE00C2 
+
+.set alias_ad_nvms_read				    	,	0xFACE00C4 	@ только в tonlesap
+.set alias_ad_nvms_write			    	,	0xFACE00C6 	@ только в tonlesap
+

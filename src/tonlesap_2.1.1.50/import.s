@@ -166,9 +166,13 @@ import 0x								dispatch_alarm_set						alias_dispatch_alarm_set
 import 0x								store_and_enable_alarm					alias_store_and_enable_alarm 
 		
 @работа с флэш памятью		
-import 0x								_write_flash								alias__write_flash		@ функция удалена по соображениям безопасности (проверить как работает на tonlesap)
-import 0x								read_flash								alias_read_flash
-					
+@import 0x								_write_flash							alias__write_flash		@ функция удалена по соображениям безопасности (проверить как работает на tonlesap)
+@import 0x								read_flash								alias_read_flash
+import 0x000788C8 						ad_nvms_read							alias_ad_nvms_read
+import 0x000788E2 						ad_nvms_write							alias_ad_nvms_write
+
+
+
 import 0x0002EA28						get_generic_data						alias_get_generic_data 
 import 0x								set_generic_data						alias_set_generic_data
 					

@@ -157,6 +157,12 @@ import alias_f_log_flush					f_log_flush
 import alias_get_battery_charge				get_battery_charge
 import alias_silence_page_create_frame		silence_page_create_frame
 
+import alias_compass_get_degree				compass_get_degree				@	compass_get_degree		
+import alias_compass_need_calibration		compass_need_calibration		@	compass_need_calibration
+import alias_compass_task_resume			compass_task_resume				@	compass_task_resume						
+import alias_sensors_enable					sensors_enable					@	sensors_enable		
+
+
 
 @@@@@@@@@     Функции библиотеки    @@@@@@@@@@@@
 @@ common.c
