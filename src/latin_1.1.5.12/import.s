@@ -92,6 +92,7 @@ import 0x08018A68 draw_filled_rect                  alias_draw_filled_rect
 import 0x08020240 show_res_by_id                    alias_show_res_by_id
 import 0x08018164 fill_screen_bg                    alias_fill_screen_bg
 import 0x08019418 set_graph_callback_to_ram_1       alias_set_graph_callback_to_ram_1
+import 0x08019418 GUI_UC_SetEncodeUTF8       		alias_GUI_UC_SetEncodeUTF8
 import 0x08018180 draw_filled_rect_bg               alias_draw_filled_rect_bg
 import 0x080503B8 repaint_screen_lines              alias_repaint_screen_lines
 import 0x080503A0 repaint_screen                    alias_repaint_screen
@@ -148,6 +149,7 @@ import 0x0805BF44 set_left_side_menu_active         alias_set_left_side_menu_act
 
 import 0x08046760 get_current_date_time             alias_get_current_date_time
 import 0x08046734 get_current_timestamp             alias_get_current_timestamp
+import 0x0804844A get_system_ms             		alias_get_system_ms
 
 import 0x0803C250 show_watchface                    alias_show_watchface 
 import 0x08020110 show_big_digit                    alias_show_big_digit 

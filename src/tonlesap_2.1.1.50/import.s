@@ -94,7 +94,7 @@ import 0x								draw_vertical_line						alias_draw_vertical_line
 			
 import 0x								draw_rect_or_line						alias_draw_rect_or_line
 			
-import 0x00019374						set_encoding_utf8						alias_set_encoding_utf8 		@set_graph_callback_to_ram_1
+import 0x00019374						GUI_UC_SetEncodeUTF8					alias_GUI_UC_SetEncodeUTF8		@set_graph_callback_to_ram_1
 import 0x00015B50						fill_screen_bg							alias_fill_screen_bg			@GUI_Clear  
 import 0x000381E4						show_res_by_id							alias_show_res_by_id 
 import 0x00018C7C						draw_res_by_address						alias_draw_res_by_address 
@@ -151,6 +151,7 @@ import 0x								text_out_font							alias_text_out_font 				@алиас к show
 
 import 0x0000FE98						get_current_date_time					alias_get_current_date_time
 import 0x0000FEEC						get_current_timestamp					alias_get_current_timestamp
+import 0x0001005C						get_system_ms							alias_get_system_ms
 
 import 0x								show_poweroff_message					alias_show_poweroff_message
 import 0x								show_options_menu_2nd_screen			alias_show_options_menu_2nd_screen

@@ -96,6 +96,7 @@ import 0x08018770 draw_rect_or_line					alias_draw_rect_or_line					@	GUI_DrawLi
 import 0x080190D8 GUI_SetPenSize					alias_GUI_SetPenSize					@	GUI_SetPenSize
 
 import 0x08019190 set_graph_callback_to_ram_1		alias_set_graph_callback_to_ram_1		@	GUI_UC_SetEncodeUTF8
+import 0x08019190 GUI_UC_SetEncodeUTF8				alias_GUI_UC_SetEncodeUTF8				@	GUI_UC_SetEncodeUTF8
 import 0x080181C8 fill_screen_bg					alias_fill_screen_bg					@	GUI_Clear
 import 0x0801FF8C show_res_by_id 					alias_show_res_by_id 					@	@	HM_DrawBitmap
 import 0x080187AC draw_res_by_address 				alias_draw_res_by_address 				@	GUI_DrawStreamedBitmapExAuto
@@ -153,6 +154,9 @@ import 0x0801FE5C text_out_font 					alias_text_out_font 					@алиас к sho
 
 import 0x080435E8 get_current_date_time				alias_get_current_date_time				@	@	get_current_time
 import 0x080435BC get_current_timestamp				alias_get_current_timestamp				@	@	get_current_rtc
+import 0x0804533A get_system_ms						alias_get_system_ms						@	@	get_rtc_ms
+
+
 
 import 0x080530A4 show_poweroff_message				alias_show_poweroff_message				@	@	poweroff_page_create_frame
 import 0x0805A48C show_options_menu_2nd_screen		alias_show_options_menu_2nd_screen		@	@	setting_page2_create_frame

@@ -22,7 +22,7 @@
 .set alias_show_res_by_id                	,	0xFACE0016 
 .set alias_fill_screen_bg                	,	0xFACE0018 
 .set alias_set_graph_callback_to_ram_1   	,	0xFACE001A 
-.set alias_set_encoding_utf8                ,	0xFACE001A	@алиас к alias_set_graph_callback_to_ram_1
+.set alias_GUI_UC_SetEncodeUTF8			  	,	0xFACE001A 	@алиас к set_graph_callback_to_ram_1
 .set alias_draw_filled_rect_bg           	,	0xFACE001C 
 .set alias_draw_rect_or_line             	,	0xFACE001E 
 .set alias_repaint_screen_lines          	,	0xFACE0020 
@@ -124,3 +124,4 @@
 .set alias_ad_nvms_read				    	,	0xFACE00C4 	@ только в tonlesap
 .set alias_ad_nvms_write			    	,	0xFACE00C6 	@ только в tonlesap
 
+.set alias_get_system_ms				    ,	0xFACE00C8 

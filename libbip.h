@@ -584,7 +584,8 @@ extern int 		get_last_text_pos_x();													  //	возвращает коо
 extern void 	set_bg_color(long color);                                                 //	выбор фонового цвета для последующих графических опреаций
 extern void 	set_fg_color (long color);                                                //	выбор цвета для последующих графических опреаций
 extern void 	fill_screen_bg();                                                         //	заливка экрана цветом фона
-extern int		set_graph_callback_to_ram_1();                                            //	использование данной функции необходимо производить в соответствии с примером
+extern int		__attribute__ ((deprecated("set_graph_callback_to_ram_1 is deprecated use GUI_UC_SetEncodeUTF8 instead"))) set_graph_callback_to_ram_1();                                            //	подключение кодировки UTF8 для функций вывода текста
+extern int		GUI_UC_SetEncodeUTF8();                                         		 //	подключение кодировки UTF8 для функций вывода текста
 extern void 	repaint_screen_lines(int from, int to);                                   //	обновить на экране строки (копирование из видеопамяти в дисплей)
 extern void 	repaint_screen();                                                         //	обновить весь экран ((копирование из видеопамяти в дисплей))
 extern void 	draw_horizontal_line(int pos_y, int from_x, int to_x);                    //	отрисовка горизонтальной линии
@@ -625,8 +626,9 @@ extern  void	vPortFree( void *pv );                                             
                                                                                           //	
 extern	int		get_left_side_menu_active();                                              //	возвращает переменную left_side_menu_active
                                                                                           //	
-extern	int		get_current_date_time(struct datetime_* datetime);                        //	возвращает данные о текущей дате/времени
+extern	int		get_current_date_time(struct datetime_* datetime);                        //	заполняет данные о текущей дате/времени, возвращает милисекунды текущей секунды
 extern	int		get_current_timestamp();    						          	          //	возвращает значение текущего UNIX timestamp
+extern	int		get_system_ms();    						          	        			  //	возвращает количество мс, прошедших с 01.01.1970
 
 extern  int 	show_watchface();                                                         //	процедура отображения циферблата
 extern  void 	__attribute__ ((deprecated("show_big_digit is deprecated use text_out_font instead"))) show_big_digit(int color, const char * digits, int pos_x, unsigned int pos_y, int space); 	//	отображение цифр большим шрифтом
@@ -672,7 +674,7 @@ extern	int is_gps_fixed();																//	проверка готовност
 
 // Функции компаса
 extern	short	compass_get_degree();													//	получение текущего азимута компаса
-extern	bool	compass_need_calibration();												//	получение статуса необходимости калибровки компаса
+extern	int		compass_need_calibration();												//	получение статуса необходимости калибровки компаса
 extern	void	compass_task_resume();													//	выполнение инициализации компаса
 extern	int 	sensors_enable(int sensor, int enable);									//	включение/отключение сенсоров
 

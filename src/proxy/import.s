@@ -54,7 +54,8 @@ import alias_draw_vertical_line				draw_vertical_line
 import alias_draw_filled_rect				draw_filled_rect
 import alias_show_res_by_id					show_res_by_id
 import alias_fill_screen_bg					fill_screen_bg
-import alias_set_graph_callback_to_ram_1	set_graph_callback_to_ram_1
+import alias_set_graph_callback_to_ram_1	set_graph_callback_to_ram_1		@ в замену данной функции добавлена GUI_UC_SetEncodeUTF8
+import alias_GUI_UC_SetEncodeUTF8			GUI_UC_SetEncodeUTF8
 import alias_draw_filled_rect_bg			draw_filled_rect_bg
 import alias_draw_rect_or_line				draw_rect_or_line
 import alias_repaint_screen_lines			repaint_screen_lines
@@ -107,9 +108,11 @@ import alias_dispatch_left_side_menu		dispatch_left_side_menu
 import alias_get_left_side_menu_active		get_left_side_menu_active 
 
 import alias_get_current_date_time			get_current_date_time
+import alias_get_current_timestamp			get_current_timestamp
+import alias_get_system_ms					get_system_ms	
 
 import alias_show_watchface					show_watchface 
-import alias_show_big_digit					show_big_digit 
+@import alias_show_big_digit					show_big_digit 		@	в замену данной функции добавлена show_big_digit
 import alias_text_out_font					text_out_font 	@алиас к show_big_digit
 import alias_vTaskDelay						vTaskDelay
 
@@ -152,7 +155,6 @@ import alias_get_navi_data					get_navi_data
 
 import alias_add_notification				add_notification
 import alias_create_and_show_notification	create_and_show_notification
-import alias_get_current_timestamp			get_current_timestamp
 import alias_f_log_flush					f_log_flush
 import alias_get_battery_charge				get_battery_charge
 import alias_silence_page_create_frame		silence_page_create_frame
